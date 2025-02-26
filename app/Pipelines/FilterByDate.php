@@ -9,19 +9,15 @@ use Illuminate\Support\Facades\Log;
 
 class FilterByDate
 {
-  public function handle(Builder $builder, Closure $next)
+  public function __construct(private ?string $date_start, private ?string $date_end) {}
+
+  public function __invoke(Builder $builder, Closure $next)
   {
-    $date_start = request()->input('date_start');
-    $date_end = request()->input('date_end');
-
-    if ($date_start && $date_end) {
-      Log::info("FilterByDate: $date_start - $date_end");
-      $date_start = Carbon::parse($date_start)->startOfDay();
-      $date_end = Carbon::parse($date_end)->endOfDay();
-
-      $builder->whereBetween('created_at', [$date_start, $date_end]);
+    if (!$this->date_start || !$this->date_end) {
+      return $next($builder);
     }
-
+    Log::info("FilterByDate: $this->date_start - $this->date_end");
+    $builder->whereBetween('created_at', [Carbon::parse($this->date_start)->startOfDay(), Carbon::parse($this->date_end)->endOfDay()]);
     return $next($builder);
   }
 }

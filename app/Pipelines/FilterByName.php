@@ -8,15 +8,16 @@ use Illuminate\Support\Facades\Log;
 
 class FilterByName
 {
+  public function __construct(private ?string $name) {}
 
 
-  public function handle(Builder $builder, Closure $next)
+  public function __invoke(Builder $builder, Closure $next)
   {
-    $name = request()->input('name');
-    if ($name) {
-      Log::info("FilterByName: $name");
-      $builder->where('name', 'like', "%$name%");
+    if (!$this->name) {
+      return $next($builder);
     }
+    Log::info("FilterByName: $this->name");
+    $builder->whereLike('name', "%$this->name%");
     return $next($builder);
   }
 }

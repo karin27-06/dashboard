@@ -9,13 +9,17 @@ use Illuminate\Support\Facades\Log;
 class FilterByState
 {
 
-  public function handle(Builder $builder, Closure $next)
+  public function __construct(private ?bool $state) {}
+
+
+  public function __invoke(Builder $builder, Closure $next)
   {
-    $state = request()->input('state');
-    if ($state === '0' || $state === '1') {
-      Log::info("FilterByState: $state");
-      $builder->where('state', $state);
+    if (is_null($this->state)) {
+      return $next($builder);
     }
+
+    $builder->where('state', $this->state);
+    Log::info("FilterByState: $this->state");
     return $next($builder);
   }
 }
